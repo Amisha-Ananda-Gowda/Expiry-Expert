@@ -4,7 +4,7 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import useClipboard from "react-use-clipboard";
-import "./ProductForm.css"; // Import the CSS file
+
 
 const ProductForm = ({ categories, onSubmit, editProduct }) => {
   const [selectedCategory, setSelectedCategory] = useState("");

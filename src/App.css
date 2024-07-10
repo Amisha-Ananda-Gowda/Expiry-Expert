@@ -281,3 +281,45 @@ video {
 .canvas-container {
   display: none;
 }
+
+.menu-icon{
+  display:none;
+}
+
+@media screen and (max-width: 480px) {
+  nav ul {
+    margin-top:0;
+    padding-top:0;
+    display: none; /* Hide the navigation list by default on mobile */
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  #nav{
+    align-items:center;
+    margin-bottom:0;
+  }
+.menu-icon{
+  display: flex; /* Show the expand icon */
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    align-items:center;
+    margin-left:48vw;
+    justify-content:center;
+}
+
+
+
+ 
+.product-form .form-column {
+
+  width: 80vw;
+}
+  .expanded ul {
+    display: flex; /* Show the navigation list when expanded */
+  }
+
+  .expanded .expand-icon {
+    background: url(../public/images/menu1.png) no-repeat center center; /* Replace with your collapse icon image path */
+  }
+}
