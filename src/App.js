@@ -4,6 +4,7 @@ import ProductForm from "./components/ProductForm";
 
 import "./App.css";
 
+
 const App = () => {
   const [categories, setCategories] = useState([
     "Expiring Soon",
