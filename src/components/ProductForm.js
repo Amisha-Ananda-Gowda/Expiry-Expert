@@ -37,9 +37,10 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
   }, [editProduct]);
 
   useEffect(() => {
+    const video = videoRef.current;
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -122,6 +123,22 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     localStorage.setItem("products", JSON.stringify(products));
   };
 
+  const scheduleNotification = useCallback((productName) => {
+    const now = new Date();
+    const notificationTime = new Date(now.getTime() + 10000); // Schedule notification for 10 seconds from now for testing
+
+    const delay = notificationTime - now;
+    console.log(`Current time: ${now}`);
+    console.log(`Notification time: ${notificationTime}`);
+    console.log(
+      `Scheduling notification for ${productName} in ${delay / 1000} seconds.`
+    );
+
+    setTimeout(() => {
+      showNotification(productName);
+    }, delay);
+  }, []);
+
   const checkExpiryDates = useCallback(() => {
     console.log("Checking expiry dates...");
     const products = JSON.parse(localStorage.getItem("products")) || [];
@@ -136,23 +153,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
         scheduleNotification(product.name);
       }
     });
-  }, []);
-
-  const scheduleNotification = (productName) => {
-    const now = new Date();
-    const notificationTime = new Date(now.getTime() + 10000); // Schedule notification for 10 seconds from now for testing
-
-    const delay = notificationTime - now;
-    console.log(`Current time: ${now}`);
-    console.log(`Notification time: ${notificationTime}`);
-    console.log(
-      `Scheduling notification for ${productName} in ${delay / 1000} seconds.`
-    );
-
-    setTimeout(() => {
-      showNotification(productName);
-    }, delay);
-  };
+  }, [scheduleNotification]);
 
   const showNotification = (productName) => {
     if (Notification.permission === "granted") {
