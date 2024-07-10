@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Tesseract from "tesseract.js";
 import SpeechRecognition, {
   useSpeechRecognition,
@@ -12,7 +12,6 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
   const [expiryDate, setExpiryDate] = useState("");
   const [image, setImage] = useState(null);
   const [text, setText] = useState("");
-  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [ocrTarget, setOcrTarget] = useState(""); // State to track the target of OCR (name or date)
   const videoRef = useRef(null);
@@ -58,7 +57,6 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
   };
 
   const processImage = (image, target) => {
-    setIsOcrProcessing(true);
     Tesseract.recognize(image, "eng", { logger: (m) => console.log(m) }).then(
       ({ data: { text } }) => {
         if (target === "name") {
@@ -66,7 +64,6 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
         } else if (target === "date") {
           setExpiryDate(text);
         }
-        setIsOcrProcessing(false);
         setIsCameraOpen(false);
       }
     );
@@ -85,8 +82,10 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
   const openCamera = (target) => {
     navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
       const video = videoRef.current;
-      video.srcObject = stream;
-      video.play();
+      if (video) {
+        video.srcObject = stream;
+        video.play();
+      }
     });
     setIsCameraOpen(true);
     setOcrTarget(target);
@@ -123,7 +122,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     localStorage.setItem("products", JSON.stringify(products));
   };
 
-  const checkExpiryDates = () => {
+  const checkExpiryDates = useCallback(() => {
     console.log("Checking expiry dates...");
     const products = JSON.parse(localStorage.getItem("products")) || [];
     const today = new Date().toISOString().split("T")[0];
@@ -137,7 +136,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
         scheduleNotification(product.name);
       }
     });
-  };
+  }, []);
 
   const scheduleNotification = (productName) => {
     const now = new Date();
@@ -188,7 +187,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     console.log("Setting interval for checking expiry dates");
     const interval = setInterval(checkExpiryDates, 60000); // Check every minute for testing
     return () => clearInterval(interval);
-  }, []);
+  }, [checkExpiryDates]);
 
   if (!browserSupportsSpeechRecognition) {
     return <p>Your browser does not support speech recognition.</p>;
