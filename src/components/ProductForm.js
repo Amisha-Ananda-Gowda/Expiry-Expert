@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Tesseract from "tesseract.js";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
-import useClipboard from "react-use-clipboard";
+import { useSpeechRecognition } from "react-speech-recognition";
 
 const ProductForm = ({ categories, onSubmit, editProduct }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -13,15 +12,15 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
   const [ocrTarget, setOcrTarget] = useState(""); // State to track the target of OCR (name or date)
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [textToCopy, setTextToCopy] = useState("");
-  const [isCopied, setCopied] = useClipboard(textToCopy, { successDuration: 1000 });
+
+
 
   // Validation error states
   const [categoryError, setCategoryError] = useState("");
   const [productNameError, setProductNameError] = useState("");
   const [expiryDateError, setExpiryDateError] = useState("");
 
-  const { transcript, browserSupportsSpeechRecognition, startListening, stopListening, resetTranscript } = useSpeechRecognition();
+  const { transcript, startListening, stopListening, resetTranscript } = useSpeechRecognition();
 
   useEffect(() => {
     if (editProduct) {
