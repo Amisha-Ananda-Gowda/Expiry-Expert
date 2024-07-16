@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import ProductForm from "./components/ProductForm";
+import addNotification from 'react-push-notification';
+import logo from './logo.svg'
 
 import "./App.css";
 
@@ -96,6 +98,27 @@ const App = () => {
     status: getProductStatus(product.expiryDate),
   }));
 
+  
+const clickTONotify = ()=>{
+
+  addNotification({
+  
+  title: 'Code With Yd',
+  
+  message: 'visit my channel',
+  
+  duration: 4000,
+  
+  icon: logo,
+  
+  native: true,
+  
+  onClick: ()=> window.location = "https://expiry-expert.netlify.app",
+  
+  });
+  
+  }
+
   return (
     <div className="App">
       <header>
@@ -160,6 +183,23 @@ const App = () => {
           )}
         </div>
       )}
+
+
+
+
+
+<div>
+
+<button onClick={clickTONotify} style={{ margin: '100px'}}>
+
+Click to notify
+
+</button>
+
+</div>
+
+
+
     </div>
   );
 };
