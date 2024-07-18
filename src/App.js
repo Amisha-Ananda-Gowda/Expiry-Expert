@@ -10,7 +10,7 @@ import { onMessage } from "firebase/messaging";
 import "./App.css";
 
 const App = () => {
-  const [categories, setCategories] = useState([
+  const [categories] = useState([
     "Expiring Soon",
     "Food",
     "Medicine",
