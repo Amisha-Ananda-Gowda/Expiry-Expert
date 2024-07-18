@@ -109,6 +109,7 @@ const App = () => {
 
   return (
     <div className="App">
+        <Toaster position="top-right" />
       <header>
         <h1 className="gradient-text">Expiry Expert</h1>
       </header>
