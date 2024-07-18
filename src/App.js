@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import ProductForm from "./components/ProductForm";
-import addNotification from 'react-push-notification';
-import logo from './logo.svg'
+import logo from './logo.png';
+
+import toast, { Toaster } from 'react-hot-toast';
+import { generateToken , messaging} from "./firebase";
+import { onMessage } from "firebase/messaging";
 
 import "./App.css";
-
 
 const App = () => {
   const [categories, setCategories] = useState([
@@ -14,13 +16,21 @@ const App = () => {
     "Medicine",
     "Cosmetics",
     "Others",
+    "Expired" // Added "Expired" category
   ]);
   const [selectedCategory, setSelectedCategory] = useState("Expiring Soon");
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [products, setProducts] = useState([]);
   const [editProduct, setEditProduct] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false); // State to manage form submission
 
   useEffect(() => {
+    generateToken();
+    onMessage(messaging, (payload)=> {
+      console.log(payload);
+      toast(payload.notification.body);
+
+    });
     const storedProducts = JSON.parse(localStorage.getItem("products")) || [];
     setProducts(storedProducts);
   }, []);
@@ -28,12 +38,7 @@ const App = () => {
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
     setIsFormVisible(false);
-  };
-
-  const handleAddClick = () => {
-    setSelectedCategory("");
-    setIsFormVisible(true);
-    setEditProduct(null);
+    setIsSubmitted(false); // Reset isSubmitted when changing category
   };
 
   const handleFormSubmit = (product) => {
@@ -42,20 +47,17 @@ const App = () => {
       updatedProducts = products.map((p) =>
         p.id === editProduct.id ? product : p
       );
+      alert("Product edited successfully!"); // Alert message for successful edit
     } else {
       product.id = Date.now();
       updatedProducts = [...products, product];
+      alert("Product added successfully!"); // Alert message for successful addition
     }
     setProducts(updatedProducts);
     localStorage.setItem("products", JSON.stringify(updatedProducts));
     setIsFormVisible(false);
     setEditProduct(null);
-  };
-
-  const handleCategoryEdit = (oldCategory, newCategoryName) => {
-    setCategories(
-      categories.map((cat) => (cat === oldCategory ? newCategoryName : cat))
-    );
+    setIsSubmitted(true); // Set isSubmitted to true after form submission
   };
 
   const handleEditClick = (product) => {
@@ -84,9 +86,16 @@ const App = () => {
             );
           })
           .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
-      : products
-          .filter((product) => product.category === selectedCategory)
-          .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+      : selectedCategory === "Expired"
+          ? products
+              .filter((product) => {
+                const productExpiryDate = new Date(product.expiryDate);
+                return productExpiryDate < new Date(); // Filter out expired products
+              })
+              .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
+          : products
+              .filter((product) => product.category === selectedCategory)
+              .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
 
   const getProductStatus = (expiryDate) => {
     const today = new Date();
@@ -98,27 +107,6 @@ const App = () => {
     status: getProductStatus(product.expiryDate),
   }));
 
-  
-const clickTONotify = ()=>{
-
-  addNotification({
-  
-  title: 'Code With Yd',
-  
-  message: 'visit my channel',
-  
-  duration: 4000,
-  
-  icon: logo,
-  
-  native: true,
-  
-  onClick: ()=> window.location = "https://expiry-expert.netlify.app",
-  
-  });
-  
-  }
-
   return (
     <div className="App">
       <header>
@@ -127,10 +115,9 @@ const clickTONotify = ()=>{
       <Navbar
         categories={categories}
         onCategoryClick={handleCategoryClick}
-        onCategoryEdit={handleCategoryEdit}
       />
 
-      <button className="floating-button" onClick={handleAddClick}>
+      <button className="floating-button" onClick={() => handleEditClick(null)}>
         +
       </button>
       <div className="forms">
@@ -142,6 +129,10 @@ const clickTONotify = ()=>{
           />
         )}
       </div>
+
+      {isSubmitted && (
+        <img src={logo} alt="Submitted successfully" className="submitted-image" />
+      )}
 
       {selectedCategory && (
         <div>
@@ -183,23 +174,6 @@ const clickTONotify = ()=>{
           )}
         </div>
       )}
-
-
-
-
-
-<div>
-
-<button onClick={clickTONotify} style={{ margin: '100px'}}>
-
-Click to notify
-
-</button>
-
-</div>
-
-
-
     </div>
   );
 };
