@@ -4,7 +4,7 @@ import ProductForm from "./components/ProductForm";
 import logo from './logo.png';
 
 import toast, { Toaster } from 'react-hot-toast';
-import { generateToken , messaging} from "./firebase";
+import { generateToken, messaging } from "./firebase";
 import { onMessage } from "firebase/messaging";
 
 import "./App.css";
@@ -26,14 +26,66 @@ const App = () => {
 
   useEffect(() => {
     generateToken();
-    onMessage(messaging, (payload)=> {
+    onMessage(messaging, (payload) => {
       console.log(payload);
       toast(payload.notification.body);
-
     });
     const storedProducts = JSON.parse(localStorage.getItem("products")) || [];
     setProducts(storedProducts);
+
+    const checkExpiryDates = () => {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+
+      const expiringProducts = storedProducts.filter((product) => {
+        const expiryDate = new Date(product.expiryDate);
+        return expiryDate.toDateString() === tomorrow.toDateString();
+      });
+
+      expiringProducts.forEach((product) => {
+        // Trigger notification for each expiring product
+        const notificationTitle = "Product Expiry Reminder";
+        const notificationOptions = {
+          body: `${product.name} is expiring soon!`,
+        };
+        if (Notification.permission === "granted") {
+          new Notification(notificationTitle, notificationOptions);
+        } else {
+          toast(notificationOptions.body);
+        }
+      });
+    };
+
+    const intervalId = setInterval(checkExpiryDates, 24 * 60 * 60 * 1000); // Check once every day
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
+
+  const checkExpiryDates = () => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const expiringProducts = products.filter((product) => {
+      const expiryDate = new Date(product.expiryDate);
+      return expiryDate.toDateString() === tomorrow.toDateString();
+    });
+
+    expiringProducts.forEach((product) => {
+      // Trigger notification for each expiring product
+      const notificationTitle = "Product Expiry Reminder";
+      const notificationOptions = {
+        body: `${product.name} is expiring soon!`,
+      };
+      if (Notification.permission === "granted") {
+        new Notification(notificationTitle, notificationOptions);
+      } else {
+        toast(notificationOptions.body);
+      }
+    });
+  };
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
@@ -175,6 +227,9 @@ const App = () => {
           )}
         </div>
       )}
+      
+      {/* Button to manually trigger expiry check for testing */}
+      <button onClick={checkExpiryDates}>Check Expiry Dates</button>
     </div>
   );
 };
