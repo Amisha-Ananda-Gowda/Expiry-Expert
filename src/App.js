@@ -4,7 +4,7 @@ import ProductForm from "./components/ProductForm";
 import logo from './logo.png';
 
 import toast, { Toaster } from 'react-hot-toast';
-import { generateToken, messaging } from "./firebase";
+import { generateToken, messaging } from "./firebase"; // Ensure single import
 import { onMessage } from "firebase/messaging";
 
 import "./App.css";
@@ -26,10 +26,11 @@ const App = () => {
 
   useEffect(() => {
     generateToken();
-    onMessage(messaging, (payload) => {
+    const unsubscribe = onMessage(messaging, (payload) => {
       console.log(payload);
       toast(payload.notification.body);
     });
+
     const storedProducts = JSON.parse(localStorage.getItem("products")) || [];
     setProducts(storedProducts);
 
@@ -59,8 +60,11 @@ const App = () => {
 
     const intervalId = setInterval(checkExpiryDates, 24 * 60 * 60 * 1000); // Check once every day
 
-    // Clean up the interval on component unmount
-    return () => clearInterval(intervalId);
+    // Clean up the interval and unsubscribe from messaging on component unmount
+    return () => {
+      clearInterval(intervalId);
+      unsubscribe();
+    };
   }, []);
 
   const checkExpiryDates = () => {
@@ -161,7 +165,7 @@ const App = () => {
 
   return (
     <div className="App">
-        <Toaster position="top-right" />
+      <Toaster position="top-right" />
       <header>
         <h1 className="gradient-text">Expiry Expert</h1>
       </header>
@@ -227,7 +231,7 @@ const App = () => {
           )}
         </div>
       )}
-      
+
       {/* Button to manually trigger expiry check for testing */}
       <button onClick={checkExpiryDates}>Check Expiry Dates</button>
     </div>
