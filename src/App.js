@@ -61,15 +61,16 @@ const App = () => {
     const scheduleNextCheck = () => {
       const now = new Date();
       const targetHour = 15; // Target hour
-      const targetMinute = 50;
+      const targetMinute = 55;
       const targetSecond = 0;
 
       const nextCheckDate = new Date(now);
       nextCheckDate.setHours(targetHour, targetMinute, targetSecond, 0);
 
+    
       if (now > nextCheckDate) {
         // If it's already past the target time today, schedule for tomorrow
-        nextCheckDate.setDate(nextCheckDate.getDate() + 1);
+        nextCheckDate.setDate(nextCheckDate.getDate());
       }
 
       const timeUntilNextCheck = nextCheckDate - now;
