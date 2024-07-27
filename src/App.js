@@ -62,34 +62,26 @@ const App = () => {
     const scheduleNextCheck = () => {
       const now = new Date();
       const targetHour = 16; // Target hour
-      const targetMinute = 26;
+      const targetMinute = 30;
       const targetSecond = 0;
-    
+
       const nextCheckDate = new Date(now);
       nextCheckDate.setHours(targetHour, targetMinute, targetSecond, 0);
+
     
       if (now > nextCheckDate) {
         // If it's already past the target time today, schedule for tomorrow
-        nextCheckDate.setDate(nextCheckDate.getDate() + 1);
+        nextCheckDate.setDate(nextCheckDate.getDate());
       }
-    
+
       const timeUntilNextCheck = nextCheckDate - now;
-    
-      if (timeUntilNextCheck <= 0) {
-        // If the timeUntilNextCheck is zero or negative, execute immediately
-        checkExpiryDates();
-        // Schedule the next check for 24 hours later
+
+      setTimeout(() => {
+        checkExpiryDates(); // Initial check
+        // Set interval to check every 24 hours from now
         setInterval(checkExpiryDates, 24 * 60 * 60 * 1000);
-      } else {
-        // Schedule the first check
-        setTimeout(() => {
-          checkExpiryDates(); // Initial check
-          // Set interval to check every 24 hours from now
-          setInterval(checkExpiryDates, 24 * 60 * 60 * 1000);
-        }, timeUntilNextCheck);
-      }
+      }, timeUntilNextCheck);
     };
-    
 
     scheduleNextCheck();
 
