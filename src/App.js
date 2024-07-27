@@ -10,6 +10,7 @@ import { onMessage } from "firebase/messaging";
 import "./App.css";
 
 const App = () => {
+ 
   const [categories] = useState([
     "Expiring Soon",
     "Food",
@@ -60,8 +61,8 @@ const App = () => {
 
     const scheduleNextCheck = () => {
       const now = new Date();
-      const targetHour = 15; // Target hour
-      const targetMinute = 55;
+      const targetHour = 16; // Target hour
+      const targetMinute = 18;
       const targetSecond = 0;
 
       const nextCheckDate = new Date(now);
@@ -113,6 +114,8 @@ const App = () => {
     setIsFormVisible(false);
     setEditProduct(null);
     setIsSubmitted(true); // Set isSubmitted to true after form submission
+    
+  
   };
 
   const handleEditClick = (product) => {
@@ -125,6 +128,7 @@ const App = () => {
     const updatedProducts = products.filter((product) => product.id !== id);
     setProducts(updatedProducts);
     localStorage.setItem("products", JSON.stringify(updatedProducts));
+    
   };
 
   const currentMonth = new Date().getMonth();
