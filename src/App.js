@@ -58,38 +58,36 @@ const App = () => {
       });
     };
 
-    const intervalId = setInterval(checkExpiryDates, 24 * 60 * 60 * 1000); // Check once every day
+    const scheduleNextCheck = () => {
+      const now = new Date();
+      const targetHour = 15; // Target hour (8:00 AM)
+      const targetMinute = 28;
+      const targetSecond = 0;
+
+      const nextCheckDate = new Date(now);
+      nextCheckDate.setHours(targetHour, targetMinute, targetSecond, 0);
+
+      if (now > nextCheckDate) {
+        // If it's already past the target time today, schedule for tomorrow
+        nextCheckDate.setDate(nextCheckDate.getDate() + 1);
+      }
+
+      const timeUntilNextCheck = nextCheckDate - now;
+
+      setTimeout(() => {
+        checkExpiryDates(); // Initial check
+        // Set interval to check every 24 hours from now
+        setInterval(checkExpiryDates, 24 * 60 * 60 * 1000);
+      }, timeUntilNextCheck);
+    };
+
+    scheduleNextCheck();
 
     // Clean up the interval and unsubscribe from messaging on component unmount
     return () => {
-      clearInterval(intervalId);
       unsubscribe();
     };
   }, []);
-
-  const checkExpiryDates = () => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const expiringProducts = products.filter((product) => {
-      const expiryDate = new Date(product.expiryDate);
-      return expiryDate.toDateString() === tomorrow.toDateString();
-    });
-
-    expiringProducts.forEach((product) => {
-      // Trigger notification for each expiring product
-      const notificationTitle = "Product Expiry Reminder";
-      const notificationOptions = {
-        body: `${product.name} is expiring soon!`,
-      };
-      if (Notification.permission === "granted") {
-        new Notification(notificationTitle, notificationOptions);
-      } else {
-        toast(notificationOptions.body);
-      }
-    });
-  };
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
@@ -231,9 +229,6 @@ const App = () => {
           )}
         </div>
       )}
-
-      {/* Button to manually trigger expiry check for testing */}
-      <button onClick={checkExpiryDates}>Check Expiry Dates</button>
     </div>
   );
 };
