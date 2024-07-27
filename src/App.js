@@ -62,7 +62,7 @@ const App = () => {
     const scheduleNextCheck = () => {
       const now = new Date();
       const targetHour = 16; // Target hour
-      const targetMinute = 23;
+      const targetMinute = 26;
       const targetSecond = 0;
     
       const nextCheckDate = new Date(now);
