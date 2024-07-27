@@ -7,40 +7,40 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
   const [productName, setProductName] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [image, setImage] = useState(null);
-  const [text, setText] = useState("");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [ocrTarget, setOcrTarget] = useState(""); // State to track the target of OCR (name or date)
+  const [isListening, setIsListening] = useState(false); // State to manage listening status
+  const [recognition, setRecognition] = useState(null); // State to store recognition instance
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-
-
-  // Validation error states
-  const [categoryError, setCategoryError] = useState("");
-  const [productNameError, setProductNameError] = useState("");
-  const [expiryDateError, setExpiryDateError] = useState("");
-
-  const { transcript, startListening, stopListening, resetTranscript } = useSpeechRecognition();
+  const { resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   useEffect(() => {
     if (editProduct) {
       setSelectedCategory(editProduct.category);
       setProductName(editProduct.name);
       setExpiryDate(editProduct.expiryDate);
-      setText(editProduct.text);
     }
   }, [editProduct]);
 
+  useEffect(() => {
+    // Cleanup on unmount or when listening state changes
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, [recognition]);
+
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
-    setCategoryError("");
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
     if (file) {
-      processImage(file, ocrTarget);
+      processImage(file, "name");
     }
   };
 
@@ -48,9 +48,9 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     Tesseract.recognize(image, "eng", { logger: (m) => console.log(m) }).then(
       ({ data: { text } }) => {
         if (target === "name") {
-          setProductName(text);
+          setProductName(text.trim());
         } else if (target === "date") {
-          setExpiryDate(text);
+          setExpiryDate(text.trim());
         }
         setIsCameraOpen(false);
       }
@@ -63,7 +63,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     const context = canvas.getContext("2d");
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
-      processImage(blob, ocrTarget);
+      processImage(blob, "name");
     });
   };
 
@@ -76,17 +76,58 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
       }
     });
     setIsCameraOpen(true);
-    setOcrTarget(target);
+  };
+
+  const handleStartListening = () => {
+    if (browserSupportsSpeechRecognition) {
+      resetTranscript();
+      window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new window.SpeechRecognition();
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        setProductName(transcript.trim());
+      };
+
+      recognitionInstance.onend = () => {
+        if (isListening) {
+          recognitionInstance.start();
+        }
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error detected: ' + event.error);
+        recognitionInstance.stop();
+      };
+
+      recognitionInstance.start();
+      setRecognition(recognitionInstance);
+      setIsListening(true);
+    } else {
+      alert("Browser does not support speech recognition.");
+    }
   };
 
   const handleStopListening = () => {
-    stopListening();
-    if (ocrTarget === "name") {
-      setProductName(transcript);
-    } else if (ocrTarget === "date") {
-      setExpiryDate(transcript);
+    if (recognition) {
+      recognition.stop();
     }
     resetTranscript();
+    setIsListening(false);
+  };
+
+  const handleToggleListening = () => {
+    if (isListening) {
+      handleStopListening();
+    } else {
+      handleStartListening();
+    }
   };
 
   const handleSubmit = (e) => {
@@ -112,7 +153,6 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
       name: productName,
       expiryDate,
       image,
-      text,
     };
     saveProductToLocalStorage(product); // Save to local storage
     onSubmit(product);
@@ -125,18 +165,12 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     localStorage.setItem("products", JSON.stringify(products));
   };
 
-  // Other functions and hooks remain unchanged
-
   return (
     <form onSubmit={handleSubmit} className="product-form">
       <div className="form-column">
         <label>
           Category:
-          <select
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            className={categoryError ? "error" : ""}
-          >
+          <select value={selectedCategory} onChange={handleCategoryChange}>
             <option value="">Select Category</option>
             {categories.map((category) => (
               <option key={category} value={category}>
@@ -144,22 +178,16 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
               </option>
             ))}
           </select>
-          {categoryError && <p className="error">{categoryError}</p>}
         </label>
         <label>
           Product Name:
           <input
             type="text"
             value={productName}
-            onChange={(e) => {
-              setProductName(e.target.value);
-              setProductNameError("");
-            }}
-            className={productNameError ? "error" : ""}
+            onChange={(e) => setProductName(e.target.value)}
           />
-          {productNameError && <p className="error">{productNameError}</p>}
         </label>
-        <button type="button" onClick={() => openCamera("name")}>
+        <button type="button" onClick={openCamera}>
           Open Camera for Product Name
         </button>
         <label>
@@ -167,13 +195,8 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
           <input
             type="date"
             value={expiryDate}
-            onChange={(e) => {
-              setExpiryDate(e.target.value);
-              setExpiryDateError("");
-            }}
-            className={expiryDateError ? "error" : ""}
+            onChange={(e) => setExpiryDate(e.target.value)}
           />
-          {expiryDateError && <p className="error">{expiryDateError}</p>}
         </label>
         <button type="button" onClick={() => openCamera("date")}>
           Open Camera for Expiry Date
@@ -196,16 +219,9 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
           Upload Image:
           <input type="file" accept="image/*" onChange={handleImageChange} />
         </label>
-        <button type="button" onClick={startListening}>
-          Start Listening
+        <button type="button" onClick={handleToggleListening}>
+          {isListening ? "Stop Listening" : "Start Listening"}
         </button>
-        <button type="button" onClick={handleStopListening}>
-          Stop Listening
-        </button>
-        <label>
-          Text from image:
-          <textarea value={text} onChange={(e) => setText(e.target.value)} />
-        </label>
         <button type="submit">Save Product</button>
       </div>
     </form>
