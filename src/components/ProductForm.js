@@ -32,6 +32,10 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     };
   }, [recognition]);
 
+  useEffect(() => {
+    removeExpiredProducts(); // Remove expired products on mount
+  }, []);
+
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
   };
@@ -155,6 +159,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
       image,
     };
     saveProductToLocalStorage(product); // Save to local storage
+    removeExpiredProducts(); // Remove expired products after saving
     onSubmit(product);
   };
 
@@ -165,6 +170,15 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
     localStorage.setItem("products", JSON.stringify(products));
   };
 
+  const removeExpiredProducts = () => {
+    let products = JSON.parse(localStorage.getItem("products")) || [];
+    const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+    products = products.filter((product) => product.expiryDate >= currentDate);
+    localStorage.setItem("products", JSON.stringify(products));
+  };
+
+  const filteredCategories = categories.filter(category => category.toLowerCase() !== 'expired');
+
   return (
     <form onSubmit={handleSubmit} className="product-form">
       <div className="form-column">
@@ -172,7 +186,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
           Category:
           <select value={selectedCategory} onChange={handleCategoryChange}>
             <option value="">Select Category</option>
-            {categories.map((category) => (
+            {filteredCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>

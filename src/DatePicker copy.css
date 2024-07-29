@@ -1,0 +1,27 @@
+/* src/components/MyDatePicker.css */
+.custom-datepicker .react-datepicker__header {
+    background-color: #f0f0f0; /* Change header background color */
+    border-bottom: 1px solid #ddd; /* Change header border color */
+  }
+  
+  .custom-datepicker .react-datepicker__day {
+    color: #333; /* Change the color of day numbers */
+  }
+  
+  .custom-datepicker .react-datepicker__day--selected {
+    background-color: #007bff; /* Change the background color of the selected day */
+    color: #fff; /* Change the color of the selected day text */
+  }
+  
+  .custom-datepicker .react-datepicker__day--today {
+    font-weight: bold; /* Optional: Highlight today’s date */
+  }
+  
+  .custom-datepicker .react-datepicker__month {
+    color: #333; /* Change month text color */
+  }
+  
+  .custom-datepicker .react-datepicker__year {
+    color: #333; /* Change year text color */
+  }
+  
