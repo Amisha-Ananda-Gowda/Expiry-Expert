@@ -10,7 +10,6 @@ import { onMessage } from "firebase/messaging";
 import "./App.css";
 
 const App = () => {
- 
   const [categories] = useState([
     "Expiring Soon",
     "Food",
@@ -37,19 +36,23 @@ const App = () => {
 
     const checkExpiryDates = () => {
       const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
+      const tenDaysLater = new Date();
+      tenDaysLater.setDate(today.getDate() + 10);
 
       const expiringProducts = storedProducts.filter((product) => {
         const expiryDate = new Date(product.expiryDate);
-        return expiryDate.toDateString() === tomorrow.toDateString();
+        return (
+          expiryDate > today && expiryDate <= tenDaysLater
+        );
       });
 
       expiringProducts.forEach((product) => {
-        // Trigger notification for each expiring product
+        const expiryDate = new Date(product.expiryDate);
+        const daysRemaining = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+
         const notificationTitle = "Product Expiry Reminder";
         const notificationOptions = {
-          body: `${product.name} is expiring soon!`,
+          body: `${product.name} is expiring in ${daysRemaining} day(s)!`,
         };
         if (Notification.permission === "granted") {
           new Notification(notificationTitle, notificationOptions);
@@ -68,16 +71,14 @@ const App = () => {
       const nextCheckDate = new Date(now);
       nextCheckDate.setHours(targetHour, targetMinute, targetSecond, 0);
 
-    
       if (now > nextCheckDate) {
         // If it's already past the target time today, schedule for tomorrow
-        nextCheckDate.setDate(nextCheckDate.getDate());
+        nextCheckDate.setDate(nextCheckDate.getDate() + 1);
       }
 
       const timeUntilNextCheck = nextCheckDate - now;
 
       setTimeout(() => {
-        checkExpiryDates(); // Initial check
         // Set interval to check every 24 hours from now
         setInterval(checkExpiryDates, 24 * 60 * 60 * 1000);
       }, timeUntilNextCheck);
@@ -114,8 +115,6 @@ const App = () => {
     setIsFormVisible(false);
     setEditProduct(null);
     setIsSubmitted(true); // Set isSubmitted to true after form submission
-    
-  
   };
 
   const handleEditClick = (product) => {
@@ -128,20 +127,19 @@ const App = () => {
     const updatedProducts = products.filter((product) => product.id !== id);
     setProducts(updatedProducts);
     localStorage.setItem("products", JSON.stringify(updatedProducts));
-    
   };
-
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
 
   const filteredProducts =
     selectedCategory === "Expiring Soon"
       ? products
           .filter((product) => {
+            const today = new Date();
+            const tenDaysLater = new Date();
+            tenDaysLater.setDate(today.getDate() + 10);
             const productExpiryDate = new Date(product.expiryDate);
             return (
-              productExpiryDate.getMonth() === currentMonth &&
-              productExpiryDate.getFullYear() === currentYear
+              productExpiryDate > today &&
+              productExpiryDate <= tenDaysLater
             );
           })
           .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate))
