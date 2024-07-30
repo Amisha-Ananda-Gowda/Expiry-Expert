@@ -204,15 +204,6 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
         <button type="button" onClick={openCamera}>
           Open Camera for Product Name
         </button>
-        <label>
-          Expiry Date:
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-          />
-        </label>
-        
         {isCameraOpen && (
           <div className="camera-container">
             <video ref={videoRef} width="320" height="240" />
@@ -227,6 +218,16 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
             />
           </div>
         )}
+        <label>
+          Expiry Date:
+          <input
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+          />
+        </label>
+        
+    
         <label>
           Upload Image:
           <input type="file" accept="image/*" onChange={handleImageChange} />
