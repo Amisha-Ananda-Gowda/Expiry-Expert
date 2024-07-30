@@ -50,7 +50,7 @@ const App = () => {
         const expiryDate = new Date(product.expiryDate);
         const daysRemaining = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
 
-        const notificationTitle = "Product Expiry Reminder";
+        const notificationTitle = "Expiry Expert";
         const notificationOptions = {
           body: `${product.name} is expiring in ${daysRemaining} day(s)!`,
         };
@@ -79,11 +79,13 @@ const App = () => {
       const timeUntilNextCheck = nextCheckDate - now;
 
       setTimeout(() => {
+        checkExpiryDates(); // Initial check
         // Set interval to check every 24 hours from now
         setInterval(checkExpiryDates, 24 * 60 * 60 * 1000);
       }, timeUntilNextCheck);
     };
 
+    checkExpiryDates(); // Check expiry dates on page refresh
     scheduleNextCheck();
 
     // Clean up the interval and unsubscribe from messaging on component unmount

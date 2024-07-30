@@ -212,9 +212,7 @@ const ProductForm = ({ categories, onSubmit, editProduct }) => {
             onChange={(e) => setExpiryDate(e.target.value)}
           />
         </label>
-        <button type="button" onClick={() => openCamera("date")}>
-          Open Camera for Expiry Date
-        </button>
+        
         {isCameraOpen && (
           <div className="camera-container">
             <video ref={videoRef} width="320" height="240" />
